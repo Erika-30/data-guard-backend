@@ -1,10 +1,10 @@
-// src/db/migrations/2024.04.24T14.38.27.seeds-users-table.ts
 import { Migration } from "../scripts/dbMigrate";
+
 import { faker } from "@faker-js/faker";
 import bcrypt from "bcrypt";
 
 export type User = {
-  name: string;
+  username: string;
   email: string;
   age: number;
   role: string;
@@ -14,14 +14,14 @@ export type User = {
 const roles = ["user", "admin"];
 
 export function generateUser(): User {
-  const name = faker.person.fullName();
+  const username = faker.person.fullName();
   const email = faker.internet.email();
   const age = Number(faker.number.int({ min: 18, max: 65 }));
   const role = faker.helpers.arrayElement(roles);
   const password = "!Aa0" + faker.internet.httpMethod();
 
   return {
-    name,
+    username,
     email,
     age,
     role,
@@ -35,7 +35,6 @@ export const up: Migration = async (params) => {
     users.push(generateUser());
   }
 
-  // Hash passwords before inserting into the database
   const usersWithHashedPasswords = await Promise.all(
     users.map(async (user) => ({
       ...user,
@@ -43,15 +42,16 @@ export const up: Migration = async (params) => {
     }))
   );
 
-  const values = usersWithHashedPasswords
-    .map(
-      (user) =>
-        `('${user.name}', '${user.email}', ${user.age}, '${user.role}', '${user.password}')`
-    )
-    .join(", ");
-  const sqlQuery = `INSERT INTO users (name, email, age, role, password) VALUES ${values};`;
-
-  return await params.context.query(sqlQuery);
+  for (const user of usersWithHashedPasswords) {
+    const sqlQuery = `INSERT INTO users (username, email, age, role, password) VALUES ($1, $2, $3, $4, $5);`;
+    await params.context.query(sqlQuery, [
+      user.username,
+      user.email,
+      user.age,
+      user.role,
+      user.password,
+    ]);
+  }
 };
 
 export const down: Migration = async (params) => {

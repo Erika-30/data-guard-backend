@@ -8,7 +8,7 @@ if (process.env["NODE_ENV"] === "test") {
 }
 
 query(`
-  INSERT INTO Users (name, email, age, role, password)
+  INSERT INTO Users (username, email, age, role, password)
   SELECT
     'User ' || s.id, -- Genera un nombre de usuario concatenando una cadena con el ID
     'user' || s.id || '@example.com', -- Genera un email basado en el ID
