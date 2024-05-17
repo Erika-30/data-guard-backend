@@ -1,20 +1,33 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+const multer = require("multer");
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
+import { upload, processCsvFile } from "../../services/upload.service";
 
-export const uploadFile = (req: Request, res: Response) => {
-  try {
-    // req.file es el `file` que se subió
-    // req.body contendrá los campos de texto, si los hubiera
-    console.log(req.file);
+interface MulterRequest extends Request {
+  file?: File;
+}
 
-    res.status(200).json({
-      message: "File uploaded successfully",
-      file: req.file,
-    });
-  } catch (error) {
-    console.error(error);
+export const uploadCsv = (
+  req: MulterRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  upload(req, res, async (err: any): Promise<any> => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ ok: false, message: "Upload failed" });
+    }
 
-    res.status(500).json({
-      error: "An error occurred while uploading the file",
-    });
-  }
+    if (!req.file) {
+      return res.status(400).json({ ok: false, message: "No file uploaded" });
+    }
+
+    try {
+      const { success, errors } = await processCsvFile(req.file.path);
+      res.status(200).json({ ok: true, data: { success, errors } });
+    } catch (error) {
+      next(error);
+    }
+  });
 };
