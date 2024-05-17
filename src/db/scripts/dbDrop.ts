@@ -1,7 +1,7 @@
-import { configDotenv } from "dotenv";
-import { adminClient } from "../config/dbConfig";
-import fs from "node:fs";
-import path from "node:path";
+import { config as configDotenv } from "dotenv";
+import { pool } from "../config/dbConfig";
+import fs from "fs";
+import path from "path";
 
 if (process.env["NODE_ENV"] === "test") {
   configDotenv({ path: ".env.test" });
@@ -14,18 +14,17 @@ const migrationsFileName =
     ? "migrations.test.json"
     : "migrations.json";
 
-const dbName = process.env["PGDATABASE"];
-adminClient.connect();
+const dropTable = `DROP TABLE IF EXISTS users;`;
 
-adminClient.query(`DROP DATABASE IF EXISTS "${dbName}"`, (err) => {
+pool.connect();
+
+pool.query(dropTable, (err) => {
   if (err) {
-    console.error("Error al eliminar la base de datos", err.stack);
+    console.error("Error al eliminar la tabla", err.stack);
   } else {
-    console.log(`Base de datos "${dbName}" eliminada exitosamente`);
+    console.log("Tabla 'users' eliminada exitosamente");
     try {
-      fs.unlinkSync(
-        path.join(__dirname, "..", "migrations", migrationsFileName)
-      );
+      fs.unlinkSync(path.join(__dirname, "../migrations", migrationsFileName));
     } catch {
       console.log(
         "No se pudo eliminar el archivo de migraciones",
@@ -33,5 +32,5 @@ adminClient.query(`DROP DATABASE IF EXISTS "${dbName}"`, (err) => {
       );
     }
   }
-  adminClient.end();
+  pool.end();
 });

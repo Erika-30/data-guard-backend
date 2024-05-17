@@ -1,8 +1,8 @@
-import { configDotenv } from "dotenv";
-import path from "node:path";
-import fs from "node:fs";
-import { query, pool } from "../config/dbConfig";
-import { JSONStorage, Umzug } from "umzug";
+import { config as configDotenv } from "dotenv";
+import path from "path";
+import fs from "fs";
+import { Umzug, JSONStorage } from "umzug";
+import { pool, query } from "../config/dbConfig";
 
 if (process.env["NODE_ENV"] === "test") {
   configDotenv({ path: ".env.test" });
@@ -16,20 +16,20 @@ const migrationsFileName =
     : "migrations.json";
 
 const migrator = new Umzug({
-  migrations: { glob: path.join(__dirname, "..", "migrations", "*.ts") },
+  migrations: { glob: path.join(__dirname, "../migrations/*.ts") },
   context: { query },
   storage: new JSONStorage({
-    path: path.join(__dirname, "..", "migrations", migrationsFileName),
+    path: path.join(__dirname, "../migrations", migrationsFileName),
   }),
   logger: console,
   create: {
-    folder: path.join(__dirname, "..", "migrations"),
+    folder: path.join(__dirname, "../migrations"),
     template: (filepath) => [
       [
         filepath,
         fs
           .readFileSync(
-            path.join(__dirname, "..", "template/migration-template.ts")
+            path.join(__dirname, "../template/migration-template.ts")
           )
           .toString(),
       ],

@@ -1,3 +1,5 @@
+// src/db/config/User.ts
+
 import { z } from "zod";
 
 export const UserSchema = z.object({
@@ -7,7 +9,6 @@ export const UserSchema = z.object({
     .min(1, "El nombre es requerido")
     .max(30, "El nombre no puede exceder los 30 caracteres")
     .regex(/^[a-zA-Z ]*$/, "El nombre solo puede contener letras y espacios"),
-
   email: z
     .string()
     .email("Debe ser un email válido")

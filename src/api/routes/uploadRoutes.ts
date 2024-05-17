@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { uploadCsv } from "../controllers/uploadController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 const uploadRouter = Router();
-uploadRouter.post("/upload", uploadCsv);
+
+uploadRouter.post("/", authMiddleware, uploadCsv);
 
 export default uploadRouter;

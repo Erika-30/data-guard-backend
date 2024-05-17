@@ -12,4 +12,4 @@ const gracefulShutdown = () => {
 process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
 
-app.listen(port, () => console.log(`Escuchando al puerto ${port}`));
+app.listen(port, () => console.log(`Server running on port ${port}`));

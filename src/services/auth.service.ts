@@ -13,11 +13,7 @@ export async function validateUserCredentials(
   const user = await getUserByEmailFromDB(email);
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    handleAuthenticationError();
+    throw new Error("Invalid email or password");
   }
   return user;
-}
-
-function handleAuthenticationError(): never {
-  throw new Error("Invalid username or password");
 }

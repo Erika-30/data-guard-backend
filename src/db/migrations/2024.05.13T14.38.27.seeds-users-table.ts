@@ -1,5 +1,6 @@
 import { Migration } from "../scripts/dbMigrate";
 import { faker } from "@faker-js/faker";
+import bcrypt from "bcrypt";
 
 export type User = {
   username: string;
@@ -11,12 +12,12 @@ export type User = {
 
 const roles = ["user", "admin"];
 
-export function generateUser(): User {
+export async function generateUser(): Promise<User> {
   const username = faker.person.fullName();
   const email = faker.internet.email();
   const age = faker.number.int({ min: 18, max: 100 });
   const role = faker.helpers.arrayElement(roles);
-  const password = faker.internet.password(10, true);
+  const password = await bcrypt.hash("password123", 10);
 
   return {
     username,
@@ -29,8 +30,8 @@ export function generateUser(): User {
 
 export const up: Migration = async (params) => {
   const users: User[] = [];
-  for (let i = 0; i < 200; i++) {
-    users.push(generateUser());
+  for (let i = 0; i < 10; i++) {
+    users.push(await generateUser());
   }
 
   const values = users
