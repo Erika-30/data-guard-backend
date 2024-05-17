@@ -9,7 +9,7 @@ export async function createUserInDB(user: UserData): Promise<User> {
     ? await bcrypt.hash(user.password, 10)
     : "";
   const queryParams: (string | number | boolean)[] = [
-    user.name,
+    user.username || "",
     hashedPassword,
     user.email || "",
     user.role || "user",
@@ -18,9 +18,9 @@ export async function createUserInDB(user: UserData): Promise<User> {
   return result.rows[0];
 }
 
-export async function getUserByUsernameFromDB(username: string): Promise<User> {
-  const query = "SELECT * FROM users WHERE username = $1";
-  const queryParams = [username];
+export async function getUserByEmailFromDB(email: string): Promise<User> {
+  const query = "SELECT * FROM users WHERE email = $1";
+  const queryParams = [email];
   const result = await db.query(query, queryParams);
   return result.rows[0];
 }

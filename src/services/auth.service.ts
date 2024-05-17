@@ -1,4 +1,4 @@
-import { getUserByUsernameFromDB, createUserInDB } from "../data/users.data";
+import { getUserByEmailFromDB, createUserInDB } from "../data/users.data";
 import bcrypt from "bcrypt";
 import { User, UserData } from "../db/config/User";
 
@@ -7,10 +7,10 @@ export async function createUser(userData: UserData): Promise<User> {
 }
 
 export async function validateUserCredentials(
-  username: string,
+  email: string,
   password: string
 ): Promise<User> {
-  const user = await getUserByUsernameFromDB(username);
+  const user = await getUserByEmailFromDB(email);
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new Error("Invalid username or password");

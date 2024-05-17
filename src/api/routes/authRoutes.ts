@@ -39,8 +39,8 @@ authRouter.post(
   "/login",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { username, password } = req.body;
-      const user = await validateUserCredentials(username, password);
+      const { email, password } = req.body;
+      const user = await validateUserCredentials(email, password);
       const payload = { user };
       const token = jwt.sign(payload, jwtSecret, { expiresIn: "1h" });
       res.json({ ok: true, message: "Login successful", token });
