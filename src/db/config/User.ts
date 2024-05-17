@@ -2,11 +2,14 @@ import { z } from "zod";
 
 export const UserSchema = z.object({
   id: z.number().optional(),
-  name: z
+  username: z
     .string()
     .min(1, "El nombre es requerido")
     .max(30, "El nombre no puede exceder los 30 caracteres")
-    .regex(/^[a-zA-Z ]*$/, "El nombre solo puede contener letras y espacios"),
+    .regex(
+      /^[a-zA-Z0-9 ]*$/,
+      "El nombre solo puede contener letras, números y espacios"
+    ),
 
   email: z
     .string()

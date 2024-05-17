@@ -21,6 +21,7 @@ export const query = async (
   params?: (string | number | boolean | null)[]
 ) => {
   try {
+    console.log(`Executing query: ${text} from dbConfig.ts`);
     const results = await pool.query(text, params);
     return results;
   } catch (error) {
