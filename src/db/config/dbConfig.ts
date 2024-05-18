@@ -52,8 +52,5 @@ export const adminClient = new Client({
 
 adminClient.connect().catch((error) => {
   console.error("Error connecting to admin database", error);
-  process.exit(1);
+  throw error;
 });
-
-// Use adminClient for admin operations and then disconnect
-// adminClient.query('YOUR_ADMIN_OPERATION').finally(() => adminClient.end());

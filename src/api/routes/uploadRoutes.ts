@@ -1,9 +1,14 @@
-import { Router } from "express";
-import { uploadCsv } from "../controllers/uploadController";
+import express from "express";
+
 import { authMiddleware } from "../middlewares/authMiddleware";
+import multer from "multer";
 
-const uploadRouter = Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+import { uploadCsv } from "../controllers/uploadController";
 
-uploadRouter.post("/", authMiddleware, uploadCsv);
+const uploadRouter = express.Router();
+
+uploadRouter.post("/upload", authMiddleware, upload.single("file"), uploadCsv);
 
 export default uploadRouter;

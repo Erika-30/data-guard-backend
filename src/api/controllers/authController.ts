@@ -10,7 +10,7 @@ const jwtSecret = process.env["JWT_SECRET"] || "your-secret-key";
 
 export const validateUser = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   const result = UserSchema.safeParse(req.body);
