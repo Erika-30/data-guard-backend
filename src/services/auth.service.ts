@@ -3,6 +3,12 @@ import bcrypt from "bcrypt";
 import { User, UserData } from "../db/config/User";
 
 export async function createUser(userData: UserData): Promise<User> {
+  const user = await getUserByEmailFromDB(userData.email);
+
+  if (user !== undefined) {
+    throw new Error("Email already in use");
+  }
+
   return await createUserInDB(userData);
 }
 

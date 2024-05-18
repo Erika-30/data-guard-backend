@@ -1,34 +1,22 @@
 import { Response, Request } from "express";
-import csv from "csv-parser"; // csv hace referencia a la librería csv-parser que se encarga de leer archivos CSV, si luego se quiere transformar a un objeto JSON se puede usar JSON.stringify y si luego se quiere transformar a un objeto js se puede usar JSON.parse. si de forma directa se quiere transformar de csv a objeto js se puede usar la librería csvtojson y luego se puede usar JSON.parse
+import csv from "csv-parser";
 import { PassThrough } from "stream";
-import { UserDto, UserSchema } from "../../db/config/User";
+import { UserSchema } from "../../db/config/User";
+import { createUser } from "../../services/auth.service";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
 }
 
-export const uploadCsv = (req: MulterRequest, res: Response, err: any) => {
+export const uploadCsv = (req: MulterRequest, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ ok: false, message: "No file uploaded" });
   }
 
-  if (!req.file) {
-    return res.status(400).send({
-      status: false,
-      message: "No se ha subido ningún archivo",
-    });
-  }
+  let userPromises: any = [];
+  let userListOk: FailureUserDto[] = [];
+  let userListError: FailureUserDto[] = [];
 
-  // esperado
-  const userListOk: UserDto[] = [];
-
-  // esperado
-  const userLisFail: UserDto[] = [];
-
-  // esperado
-  const userListErrors: any[] = [];
-
-  const results: any[] = [];
   const bufferStream = new PassThrough();
   bufferStream.end(req.file.buffer);
 
@@ -38,49 +26,71 @@ export const uploadCsv = (req: MulterRequest, res: Response, err: any) => {
     .pipe(
       csv({
         separator: ";",
-        mapValues: ({ header, index, value }) => {
+        mapValues: ({ header, value }) => {
           if (header === "age") return parseInt(value);
           return value;
         },
       })
     )
-    .on("data", (data) => results.push(data))
     .on("data", (data) => {
       rowNumber++;
       data.rowNumber = rowNumber;
 
-      const userData = new UserDto();
+      const userData = new FailureUserDto();
       userData.username = data.username;
       userData.email = data.email;
       userData.age = data.age;
       userData.role = data.role;
       userData.password = data.password;
 
-      console.log(userData);
+      let rs = UserSchema.safeParse(userData);
 
-      let rs = validateUsers(userData);
       if (!rs.success) {
-        userLisFail.push(userData);
-
-        rs.error.errors.forEach((error) => {
-          userListErrors.push({
-            row: results.length,
-            details: { [error.path[0]]: error.message },
-          });
+        userData.row = data.rowNumber;
+        userData.details = rs.error.errors.map((error) => {
+          let er = new PathErrorDto();
+          er.path = error.path[0] as string;
+          er.message = error.message;
+          return er;
         });
+        userListError.push(userData);
       } else {
-        userListOk.push(userData);
+        let userPromise = createUser(userData)
+          .then(() => {
+            userListOk.push(userData);
+          })
+          .catch((error) => {
+            userData.row = data.rowNumber;
+            userData.details = [
+              {
+                path:
+                  error.message == "Email already in use" ? "email" : "general",
+                message: error.message,
+              },
+            ];
+            userListError.push(userData);
+          });
+        userPromises.push(userPromise);
       }
     })
-    .on("end", () => {
-      res.send({
-        status: true,
-        message: "Archivo CSV leído correctamente",
-        data: {
-          success: userListOk,
-          errors: userLisFail,
-        },
-      });
+    .on("end", async () => {
+      try {
+        await Promise.all(userPromises);
+
+        res.send({
+          status: true,
+          message: "Archivo CSV leído correctamente",
+          data: {
+            success: userListOk,
+            errors: userListError,
+          },
+        });
+      } catch (error: any) {
+        res.status(500).send({
+          status: false,
+          message: "Error al crear usuarios: " + error.message,
+        });
+      }
     })
     .on("error", (error) => {
       return res.status(500).send({
@@ -90,16 +100,20 @@ export const uploadCsv = (req: MulterRequest, res: Response, err: any) => {
     });
 };
 
-export const validateUsers = (user: any) => {
-  const result = UserSchema.safeParse(user);
-  if (!result.success) {
-    console.log("rrrrrrrrrrrrrrrrr");
-    console.log(result.error.errors);
-  }
-  return result;
-};
+export class UserDto {
+  username!: string;
+  email!: string;
+  age?: number;
+  role!: string;
+  password!: string;
+}
 
-export class UserDtoRow {
+export class FailureUserDto extends UserDto {
   row?: number;
-  details!: UserDto;
+  details!: PathErrorDto[];
+}
+
+export class PathErrorDto {
+  path?: string;
+  message?: string;
 }

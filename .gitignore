@@ -2,4 +2,4 @@
 .env
 # ignora .env.local
 .env.test
-node_modules
+
