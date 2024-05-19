@@ -13,9 +13,9 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
     return res.status(400).json({ ok: false, message: "No file uploaded" });
   }
 
-  let userPromises: any = [];
-  let userListOk: FailureUserDto[] = [];
-  let userListError: FailureUserDto[] = [];
+  const userPromises: any[] = [];
+  const userListOk: FailureUserDto[] = [];
+  const userListError: FailureUserDto[] = [];
 
   const bufferStream = new PassThrough();
   bufferStream.end(req.file.buffer);
@@ -43,19 +43,17 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
       userData.role = data.role;
       userData.password = data.password;
 
-      let rs = UserSchema.safeParse(userData);
+      const validationResult = UserSchema.safeParse(userData);
 
-      if (!rs.success) {
+      if (!validationResult.success) {
         userData.row = data.rowNumber;
-        userData.details = rs.error.errors.map((error) => {
-          let er = new PathErrorDto();
-          er.path = error.path[0] as string;
-          er.message = error.message;
-          return er;
-        });
+        userData.details = validationResult.error.errors.map((error) => ({
+          path: error.path[0] as string,
+          message: error.message,
+        }));
         userListError.push(userData);
       } else {
-        let userPromise = createUser(userData)
+        const userPromise = createUser(userData)
           .then(() => {
             userListOk.push(userData);
           })
@@ -64,7 +62,9 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
             userData.details = [
               {
                 path:
-                  error.message == "Email already in use" ? "email" : "general",
+                  error.message === "Email already in use"
+                    ? "email"
+                    : "general",
                 message: error.message,
               },
             ];
@@ -77,7 +77,7 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
       try {
         await Promise.all(userPromises);
 
-        res.send({
+        res.json({
           status: true,
           message: "Archivo CSV leído correctamente",
           data: {
@@ -86,16 +86,16 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
           },
         });
       } catch (error: any) {
-        res.status(500).send({
+        res.status(500).json({
           status: false,
           message: "Error al crear usuarios: " + error.message,
         });
       }
     })
     .on("error", (error) => {
-      return res.status(500).send({
+      res.status(500).json({
         status: false,
-        message: "Error al leer el archivo CSV" + error.message,
+        message: "Error al leer el archivo CSV: " + error.message,
       });
     });
 };
@@ -103,7 +103,7 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
 export class UserDto {
   username!: string;
   email!: string;
-  age?: number;
+  age?: string;
   role!: string;
   password!: string;
 }

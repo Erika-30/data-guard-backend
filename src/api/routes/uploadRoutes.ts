@@ -1,11 +1,10 @@
 import express from "express";
-
-import { authMiddleware } from "../middlewares/authMiddleware";
 import multer from "multer";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { uploadCsv } from "../controllers/uploadController";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-import { uploadCsv } from "../controllers/uploadController";
 
 const uploadRouter = express.Router();
 

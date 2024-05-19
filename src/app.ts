@@ -12,6 +12,16 @@ if (process.env["NODE_ENV"] === "test") {
 
 export const app = express();
 
+const cors = require("cors");
+
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//   })
+// );
+
+app.use(cors());
+
 app.use(express.json());
 
 app.use("/auth", authRouter);

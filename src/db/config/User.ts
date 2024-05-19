@@ -1,5 +1,3 @@
-// src/db/config/User.ts
-
 import { z } from "zod";
 
 export const UserSchema = z.object({
@@ -14,8 +12,11 @@ export const UserSchema = z.object({
     .email("Debe ser un email válido")
     .max(50, "El email no puede exceder los 50 caracteres"),
   age: z
-    .number()
-    .positive("La edad debe ser un número positivo")
+    .string()
+    .refine((value) => /^\d+$/.test(value), {
+      message: "La edad debe ser un número positivo",
+      path: ["age"],
+    })
     .optional()
     .nullable(),
   role: z
