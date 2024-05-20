@@ -39,7 +39,7 @@ export const uploadCsv = (req: MulterRequest, res: Response) => {
       const userData = new FailureUserDto();
       userData.username = data.username;
       userData.email = data.email;
-      userData.age = data.age;
+      userData.age = data.age.toString();
       userData.role = data.role;
       userData.password = data.password;
 
