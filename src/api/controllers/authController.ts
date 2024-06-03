@@ -1,10 +1,12 @@
+// src/api/controllers/authController.ts
+
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import {
   createUser,
   validateUserCredentials,
 } from "../../services/auth.service";
-import { UserSchema } from "../../db/config/User";
+import { UserSchema } from "../../config/dbConfig";
 
 const jwtSecret = process.env["JWT_SECRET"] || "your-secret-key";
 
@@ -13,8 +15,6 @@ export const validateUser = (
   _res: Response,
   next: NextFunction
 ) => {
-  console.log("validateUser DESDE AUTHcontroller.ts");
-  console.log(req.body);
   const result = UserSchema.safeParse(req.body);
   if (!result.success) {
     return next({
@@ -32,11 +32,8 @@ export const signup = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("signup");
   try {
-    console.log(req.body);
     const user = await createUser(req.body);
-    console.log(user);
     res
       .status(201)
       .json({ ok: true, message: "User created successfully", data: user });
@@ -50,9 +47,6 @@ export const login = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("login");
-  console.log(req.body);
-  console.log("login");
   try {
     const { email, password } = req.body;
     const user = await validateUserCredentials(email, password);
@@ -62,4 +56,9 @@ export const login = async (
   } catch (error) {
     next(error);
   }
+};
+
+export const logout = async (_req: Request, res: Response) => {
+  // lista de revocacion de tokens... por ver
+  res.status(200).json({ ok: true, message: "Logout successful" });
 };

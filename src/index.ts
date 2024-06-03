@@ -1,5 +1,5 @@
-import { app } from "./app";
-import { pool } from "./db/config/dbConfig";
+import app from "./app";
+import { pool } from "./config/dbConfig";
 
 const port = process.env["PORT"] || 3000;
 

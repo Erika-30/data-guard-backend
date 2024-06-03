@@ -1,8 +1,10 @@
+// src/db/scripts/dbMigrate.ts
+
 import { config as configDotenv } from "dotenv";
 import path from "path";
 import fs from "fs";
 import { Umzug, JSONStorage } from "umzug";
-import { pool, query } from "../config/dbConfig";
+import { pool, query } from "../../config/dbConfig";
 
 if (process.env["NODE_ENV"] === "test") {
   configDotenv({ path: ".env.test" });
