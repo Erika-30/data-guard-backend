@@ -1,5 +1,3 @@
-// src/db/config/User.ts
-
 import { z } from "zod";
 
 export const UserSchema = z.object({
@@ -12,9 +10,21 @@ export const UserSchema = z.object({
   email: z
     .string()
     .email("Debe ser un email válido")
-    .max(30, "El email no puede exceder los 30 caracteres"),
-  age: z.number().positive("La edad debe ser un número positivo").optional(),
-  role: z.enum(["user", "admin"]).default("user"),
+    .max(50, "El email no puede exceder los 50 caracteres"),
+  age: z
+    .string()
+    .refine((value) => /^\d+$/.test(value), {
+      message: "La edad debe ser un número positivo",
+      path: ["age"],
+    })
+    .optional()
+    .nullable(),
+  role: z
+    .string()
+    .refine((value) => /^user$|^admin$/.test(value), {
+      message: "Debe ser 'user' o 'admin'",
+    })
+    .default("user"),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
