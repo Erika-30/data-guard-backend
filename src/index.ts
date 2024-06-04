@@ -1,3 +1,5 @@
+// src/index.ts
+
 import { app } from "./app";
 import { pool } from "./db/config/dbConfig";
 

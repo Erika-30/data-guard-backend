@@ -1,3 +1,5 @@
+// src/db/scripts/dbDrop.ts
+
 import { config as configDotenv } from "dotenv";
 import { pool } from "../config/dbConfig";
 import fs from "fs";

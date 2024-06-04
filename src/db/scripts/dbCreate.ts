@@ -1,3 +1,5 @@
+// src/db/scripts/dbCreate.ts
+
 import { config as configDotenv } from "dotenv";
 import { Client } from "pg";
 

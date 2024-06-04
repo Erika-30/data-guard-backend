@@ -1,3 +1,5 @@
+//src/db/config/User.ts
+
 import { z } from "zod";
 
 export const UserSchema = z.object({
