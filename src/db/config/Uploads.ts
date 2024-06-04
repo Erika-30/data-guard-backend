@@ -1,9 +1,8 @@
-// src/db/config/Uploads.ts
+//src/db/config/Uploads.ts
 
 import { createUserInDB } from "../../data/users.data";
 import { UserSchema, User, UserData } from "./User";
 
-// Function to validate and insert users into the database
 export async function uploadUsers(
   data: UserData[]
 ): Promise<{ success: User[]; errors: any[] }> {

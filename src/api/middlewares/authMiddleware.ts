@@ -1,3 +1,5 @@
+//src/api/middlewares/authMiddleware.ts
+
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../../db/config/User";
@@ -10,7 +12,7 @@ interface AuthenticatedRequest extends Request {
 
 export const authMiddleware = (
   req: AuthenticatedRequest,
-  _res: Response,
+  res: Response,
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;

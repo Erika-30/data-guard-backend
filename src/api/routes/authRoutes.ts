@@ -1,3 +1,5 @@
+//src/api/routes/authRoutes.ts
+
 import { Router } from "express";
 import { validateUser, signup, login } from "../controllers/authController";
 import { authMiddleware } from "../middlewares/authMiddleware";

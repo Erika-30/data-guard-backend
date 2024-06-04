@@ -1,7 +1,9 @@
+// src/index.ts
+
 import { app } from "./app";
 import { pool } from "./db/config/dbConfig";
 
-const port = 3000;
+const port = process.env["PORT"] || 3000;
 
 const gracefulShutdown = () => {
   pool.end(() => {

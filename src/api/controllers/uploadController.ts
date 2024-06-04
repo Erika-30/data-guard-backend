@@ -1,39 +1,121 @@
-import { Request, Response, NextFunction } from "express";
-import fs from "fs";
+//src/api/controllers/uploadController.ts
+
+import { Response, Request } from "express";
 import csv from "csv-parser";
-import { upload, uploadUsers } from "../../services/upload.service";
-import { UserData } from "../../db/config/User";
+import { PassThrough } from "stream";
+import { UserSchema } from "../../db/config/User";
+import { createUser } from "../../services/auth.service";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
 }
 
-export const uploadCsv = (
-  req: MulterRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  upload(req, res, (err: any) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ ok: false, message: "Upload failed" });
-    }
+export const uploadCsv = (req: MulterRequest, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ ok: false, message: "No file uploaded" });
+  }
 
-    if (!req.file) {
-      return res.status(400).json({ ok: false, message: "No file uploaded" });
-    }
+  const userPromises: any[] = [];
+  const userListOk: FailureUserDto[] = [];
+  const userListError: FailureUserDto[] = [];
 
-    const results: UserData[] = [];
-    fs.createReadStream(req.file.path)
-      .pipe(csv())
-      .on("data", (data) => results.push(data))
-      .on("end", async () => {
-        try {
-          const { success, errors } = await uploadUsers(results);
-          res.status(200).json({ ok: true, data: { success, errors } });
-        } catch (error) {
-          next(error);
-        }
+  const bufferStream = new PassThrough();
+  bufferStream.end(req.file.buffer);
+
+  let rowNumber = 0;
+
+  return bufferStream
+    .pipe(
+      csv({
+        separator: ";",
+        mapValues: ({ header, value }) => {
+          if (header === "age") return parseInt(value);
+          return value;
+        },
+      })
+    )
+    .on("data", (data) => {
+      rowNumber++;
+      data.rowNumber = rowNumber;
+
+      const userData = new FailureUserDto();
+      userData.username = data.username;
+      userData.email = data.email;
+      userData.age = data.age.toString();
+      userData.role = data.role;
+      userData.password = data.password;
+
+      const validationResult = UserSchema.safeParse(userData);
+
+      if (!validationResult.success) {
+        userData.row = data.rowNumber;
+        userData.details = validationResult.error.errors.map((error) => ({
+          path: error.path[0] as string,
+          message: error.message,
+        }));
+        userListError.push(userData);
+      } else {
+        const userPromise = createUser(userData)
+          .then(() => {
+            userListOk.push(userData);
+          })
+          .catch((error) => {
+            userData.row = data.rowNumber;
+            userData.details = [
+              {
+                path:
+                  error.message === "Email already in use"
+                    ? "email"
+                    : "general",
+                message: error.message,
+              },
+            ];
+            userListError.push(userData);
+          });
+        userPromises.push(userPromise);
+      }
+    })
+    .on("end", async () => {
+      try {
+        await Promise.all(userPromises);
+
+        res.json({
+          status: true,
+          message: "Archivo CSV leído correctamente",
+          data: {
+            success: userListOk,
+            errors: userListError,
+          },
+        });
+      } catch (error: any) {
+        res.status(500).json({
+          status: false,
+          message: "Error al crear usuarios: " + error.message,
+        });
+      }
+    })
+    .on("error", (error) => {
+      res.status(500).json({
+        status: false,
+        message: "Error al leer el archivo CSV: " + error.message,
       });
-  });
+    });
 };
+
+export class UserDto {
+  username!: string;
+  email!: string;
+  age?: string;
+  role!: string;
+  password!: string;
+}
+
+export class FailureUserDto extends UserDto {
+  row?: number;
+  details!: PathErrorDto[];
+}
+
+export class PathErrorDto {
+  path?: string;
+  message?: string;
+}
