@@ -27,6 +27,11 @@ app.use(express.json());
 app.use("/auth", authRouter);
 app.use("/user", uploadRouter);
 
+// Ruta para la raíz
+app.get("/", (req, res) => {
+  res.send("Bienvenido a Data Guard API");
+});
+
 app.use(errorMiddleware);
 
 export default app;
